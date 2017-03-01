@@ -131,7 +131,8 @@ app.get("/", function(req, res) {
 			game_list[i].status,
 			game_list[i].message
 		];
-		avaliable_game.push(game_data);
+		if(game_time > 0)
+			avaliable_game.push(game_data);
 	}
 	res.render('index', {
 		title: 'Game List',
