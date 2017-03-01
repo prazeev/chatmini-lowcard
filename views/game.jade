@@ -1,0 +1,217 @@
+doctype html
+html(lang='en')
+  head
+    meta(http-equiv='Content-Type', content='text/html; charset=UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no')
+    title Card Game
+    // CSS
+    link(href='https://fonts.googleapis.com/icon?family=Material+Icons', rel='stylesheet')
+    link(href='/css/materialize.css', type='text/css', rel='stylesheet', media='screen,projection')
+    link(href='/css/style.css', type='text/css', rel='stylesheet', media='screen,projection')
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/sweetalert2/6.4.2/sweetalert2.min.css')
+    link(href='/css/animate.css', type='text/css', rel='stylesheet', media='screen,projection')
+    link(href='https://fonts.googleapis.com/icon?family=Material+Icons', rel='stylesheet')
+    link(href='/css/jquery.toast.css', type='text/css', rel='stylesheet', media='screen,projection')
+    style(type='text/css').
+      #game-data {
+      height: 170px;
+      overflow-y: auto;
+      }
+      #game-data::-webkit-scrollbar {
+      width: 0px;  /* remove scrollbar space */
+      background: transparent;  /* optional: just make scrollbar invisible */
+      }
+      html {
+      font-family: GillSans, Calibri, Trebuchet, sans-serif;
+      }
+      #player_list_images img {
+      max-height: 50px !important;
+      max-width: 80px !important;
+      }
+      #game-data img {
+      max-height:120px !important;
+      max-width:100px ! important;
+      }
+      /*#player_list_images {
+      align-items: center;
+      }*/
+  body
+    nav.white(role='navigation')
+      .nav-wrapper.container
+        a#logo-container.brand-logo(href='#') ChatMini
+        ul.right.hide-on-med-and-down
+          li
+            a(href='gameplay.php') Play Game
+        ul#nav-mobile.side-nav
+          li
+            a(href='game.html') Play Game
+        a.button-collapse(href='#', data-activates='nav-mobile')
+          i.material-icons menu
+    #javascript
+    section.game.row
+      .col.m7.offset-m1
+        .card-panel.grey.lighten-5.z-depth-1
+          .row
+            .col.m9.s12
+              h5(id='game_name') Game Name
+            .col.m3.right-align
+              a#game_info(href='#notifications_modals')
+                h5
+                  i.material-icons notifications_none
+          .row
+            .col.m12
+              #player_list_images(align='center')
+                img.responsive-img.circle(src='/images/avatar.png', data-tooltip='Bashudev Paudel')
+            .col.m12.center
+              br
+              #game-data
+      .col.m3.s12
+        .card
+          .card-content.teal
+            h5 Game Information
+          .card-content
+            b Player List
+            p#player_list
+              |  
+            b Status
+            p(id='status')
+            b Next Action
+            .progress
+              .indeterminate
+            b Other informations
+            br
+            |           POT : 
+            span(id='pot')| 
+            span|$
+            br
+            |           Round :  
+            span(id='round')
+            br
+            |           Started by :  
+            span(id='started_by')
+            br
+            |           Winner : 
+            span(id='winner')
+            br
+            |           Game ID :  
+            span(id='game_id')
+            br
+        .center
+          if (check_user)
+            button#draw.waves-effect.waves-light.btn Draw
+          else
+            a(href='/join/'+game_id)#join.waves-effect.waves-light.btn Join Game!!
+          | 
+          button#autoroll.waves-effect.waves-light.btn.red Auto Roll 
+    // Chat messages
+    .fixed-action-btn.vertical.click-to-toggle
+      a.btn-floating.btn-large.red
+        i.material-icons chat
+      ul
+        li
+          a.btn-floating.red
+            img.responsive-img(src='http://4.bp.blogspot.com/-bB8wUiBfgPg/U5f6UCMlwWI/AAAAAAAAIt0/_qLd_TPe5Hk/s1600/red-angry-smiley-face.png')
+        li
+          a.btn-floating.yellow.darken-1
+            img.responsive-img(src='http://4.bp.blogspot.com/-nn9iheSg_HY/VOfoPqYN-bI/AAAAAAAAODA/lZ259SUvwiY/s1600/laughing-smiley-cries-tears-of-joy.png')
+        li
+          a.btn-floating.green
+            img.responsive-img(src='https://quotesandsmileys.files.wordpress.com/2014/05/teary-eyed-emoticon-crying.png?w=560')
+        li
+          a.btn-floating.blue
+            img.responsive-img(src='https://s-media-cache-ak0.pinimg.com/236x/82/72/98/827298c46e572022f8b3bdd062019b76.jpg')
+    // Modals
+    // Modal Structure
+    #notifications_modals.modal.bottom-sheet
+      .modal-content
+        h4 Notifications
+        ul.collection
+          li.collection-item.avatar
+            img.circle(src='images/yuna.jpg', alt='')
+            span.title Title
+            p
+              | First Line 
+              br
+              |             Second Line
+            a.secondary-content(href='#!')
+              i.material-icons notifications
+      .modal-footer
+        a.modal-action.modal-close.waves-effect.waves-green.btn-flat(href='#!') Clear 
+    // Scripts
+    script(src='https://code.jquery.com/jquery-2.1.1.min.js')
+    script(src='/js/materialize.js')
+    script(type='text/javascript', src='/js/jquery.easing.1.2.js')
+    script(type='text/javascript', src='js/jquery.circulate.js')
+    script(src='https://www.gstatic.com/firebasejs/3.6.9/firebase.js')
+    script(type='text/javascript', src='/js/move.min.js')
+    script(src='https://cdn.jsdelivr.net/sweetalert2/6.4.2/sweetalert2.min.js')
+    script(src="/js/jquery.toast.js")
+    script(src='/socket.io/socket.io.js')
+    script(type='text/javascript').
+      $(function() {
+      function show_toast(type,heading, message) {
+      $.toast({
+      text: message,
+      heading: heading,
+      icon: type, // Type of toast icon
+      showHideTransition: 'slide', // fade, slide or plain
+      allowToastClose: true, // Boolean value true or false
+      hideAfter: 6000, // false to make it sticky or number representing the miliseconds as time after which toast needs to be hidden
+      stack: 10, // false if there should be only one toast at a time or a number representing the maximum number of toasts to be shown at a time
+      position: 'bottom-left', // bottom-left or bottom-right or bottom-center or top-left or top-right or top-center or mid-center or an object representing the left, right, top, bottom values
+    
+    
+      textAlign: 'left',  // Text alignment i.e. left, right or center
+      loader: true,  // Whether to show loader or not. True by default
+      loaderBg: '#9EC600'
+      });
+      }
+        
+      var socket = io.connect();
+      var round = 0;
+      var card = [2,3,4,5,6,7,8,9,10,'jack','queen','king','ace'];
+      socket.on('new card', function(data) {
+      if(#{game_id} == data.game_id) {
+      $("#game-data").append("<img src='/"+data.card+"' class='responsive-img'> ");
+      $("#game-data").append(data).scrollTop($('#game-data')[0].scrollHeight);
+      }
+      });
+      socket.on('new user', function(data) {
+      var users = '';
+      var images = '';
+      for(var i in data) {
+      if(#{game_id} == data[i].game_id) {
+      var roll = (data[i].roll == null) ? '' : '['+card[data[i].roll]+']';
+      users += data[i].username+""+roll+",";
+      images += "<img src='"+data[i].picture+"' class='responsive-img circle'> ";
+      }
+      }
+      $('#player_list').html(users.slice(0, -1));
+      $('#player_list_images').html(images);
+      $('#game-data').scrollTop($('#game-data')[0].scrollHeight);
+      });
+      socket.on("new message", function(data) {
+      if(#{game_id} == data.game_id)
+      show_toast(data.type, data.heading, data.message);
+      });
+      socket.on('game info', function(data) {
+      for(var i in data) {
+      if(#{game_id} == data[i].game_id) {
+      $("#status").html(data[i].status);
+      $("#pot").html(data[i].price);
+      $("#round").html(data[i].round);
+      $("#started_by").html(data[i].start_by);
+      $("#status").html(data[i].message);
+      $("#winner").html(data[i].winner);
+      $("#game_id").html(data[i].game_id);
+      $("#game_name").html(data[i].game_name);
+      $('#game-data').scrollTop($('#game-data')[0].scrollHeight);
+      }
+      }
+      });
+      $("#draw").click(function() {
+      socket.emit('draw card', {game_id: #{game_id}});
+      });
+      $('#notifications_modals').modal();
+      $('img').tooltip({delay: 50});
+      });

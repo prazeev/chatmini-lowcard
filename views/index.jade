@@ -1,0 +1,112 @@
+doctype html
+html(lang='en')
+  head
+    meta(http-equiv='Content-Type', content='text/html; charset=UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no')
+    title Game List #{title}
+    // CSS
+    link(href='https://fonts.googleapis.com/icon?family=Material+Icons', rel='stylesheet')
+    link(href='css/materialize.css', type='text/css', rel='stylesheet', media='screen,projection')
+    link(href='css/style.css', type='text/css', rel='stylesheet', media='screen,projection')
+  body
+    nav.white(role='navigation')
+      .nav-wrapper.container
+        a#logo-container.brand-logo(href='#') ChatMini
+        ul.right.hide-on-med-and-down
+          li
+            a(href='/') Play Game
+        ul#nav-mobile.side-nav
+          li
+            a(href='/') Play Game
+        a.button-collapse(href='#', data-activates='nav-mobile')
+          i.material-icons menu
+    .container
+      .section
+        .row
+          .col.m6
+            form(action='/post', method='post')
+              .row
+                .input-field.col.s12
+                  input#game_name.validate(type='text', name='game_name')
+                  label(for='game_name') Game name
+                .input-field.col.s8
+                  select(name='price')
+                    optgroup(label='Light')
+                      option(value='5') 5$
+                      option(value='3') 3$
+                      option(value='2.5') 2.5$
+                      option(value='2') 2$
+                      option(value='1.5') 1.5$
+                      option(value='1') 1$
+                    optgroup(label='Medium')
+                      option(value='80') 80$
+                      option(value='50') 50$
+                      option(value='40') 40$
+                      option(value='30') 30$
+                      option(value='20') 20$
+                      option(value='10') 10$
+                    optgroup(label='Heavy')
+                      option(value='500') 500$
+                      option(value='450') 450$
+                      option(value='400') 400$
+                      option(value='350') 350$
+                      option(value='300') 300$
+                      option(value='200') 200$
+                  label(for='price') Price
+                .input-field.col.s4
+                  button.btn.waves-effect.waves-light.green(type='submit') Create !!
+          .col.m6
+            ul.collection
+              each game in games
+                li.collection-item.avatar
+                  img.circle(src='images/yuna.jpg', alt='')
+                  span.title
+                  p
+                    | Price : #{game[2]}$
+                    br
+                    p
+                      | #{game[1]}
+                    a.btn.waves-effect.waves-light(href='/play/'+game[0])  Enter game 
+                  a.secondary-content(href='#!')
+                    | Joining time 
+                    br
+                    i.counter(data-time=game[4]) Loading...
+                  .progress
+                    .indeterminate
+    // Scripts
+    script(src='https://code.jquery.com/jquery-2.1.1.min.js')
+    script(src='js/materialize.js')
+    script(src='js/init.js')
+    script(type='text/javascript').
+      $(function() {
+      $('select').material_select();
+      function get_time(time) {
+      if(time > 3000)
+      return "> 50 minutes";
+      else if(time > 2400)
+      return "> 40 minutes";
+      else if(time > 1800)
+      return "> 30 minutes";
+      else if(time > 1200)
+      return "> 20 minutes";
+      else if(time > 600)
+      return "> 10 minutes";
+      else if(time > 0) {
+      var min = Math.ceil(time / 60);
+      if(min > 1)
+      return "< "+(min)+" minutes";
+      else
+      return time+" seconds";
+      }
+      else
+      return "<span class='red-text'>Completed!</span>";
+      }
+      var c = setInterval(function() {
+        $(".counter").each(function() {
+          var time = $(this).attr("data-time");
+          time = time - 1;
+          $(this).attr("data-time",time);
+          $(this).html(get_time(time));
+        });
+      }, 1000)
+      })
