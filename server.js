@@ -189,7 +189,18 @@ app.post("/post", function(req, res, next) {
 						'status': 0,
 						'round' : 0
 					};
+	var picture = '';
+	get_user(username, function(e) {
+		picture = e.profile;
+	});
+	var join_data = {
+		'username': username,
+		'game_id': game_id,
+		'roll' : null,
+		'picture': picture
+	};
 	game_list.push(data);
+	game_users.push(join_data);
 	res.redirect('/play/'+game_id);
 });
 
@@ -293,10 +304,26 @@ io.sockets.on('connection', function(socket) {
 			if(game_list[i].join_time < moment().format('X') && game_list[i].status == 0) {
 				game_list[i].status = 1;
 				game_list[i].round = 1;
-				game_list[i].message = "Joining Completed.<br>First round started.";
-				io.sockets.emit('game info', game_list);
-				var message = "Joining completed. First round starts.";
-				io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'success', heading: 'Information', message: message});									
+				var left_player = 0;
+				get_no_of_player(game_list[i].game_id, function(e) {
+					left_player = e;
+				});
+				if(left_player == 1) {
+					game_list[i].status = 2;
+					game_list[i].message = "Game ended. Not enough player.";
+					io.sockets.emit('game info', game_list);
+					for(var j in game_users) {
+						if(game_users[j].game_id == game_list[i].game_id) {
+							game_users.splice(j, 1);
+						}
+					}
+					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'error', heading: 'Game Over', message: game_list[i].message});
+				} else {
+					game_list[i].message = "Joining Completed.<br>First round started.";
+					io.sockets.emit('game info', game_list);
+					var message = "Joining completed. First round starts.";
+					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'success', heading: 'Information', message: message});
+				}
 				continue;
 			}
 			// Gets game list with rolling time exceed
@@ -308,7 +335,8 @@ io.sockets.on('connection', function(socket) {
 					// For unrolled users
 					if(game_users[j].game_id == game_list[i].game_id) {
 						// IF user havent drawn for the round
-						if(game_users[j].roll == null) {
+						if(game_users[j].roll === null) {
+							console.log(game_users[j].username+" => "+game_users[j].roll+" => "+game_users[j].game_id);
 							// Round ended automatic calculations 
 							var priority = Math.floor(Math.random() * 12);
 							var card = '';
@@ -328,8 +356,8 @@ io.sockets.on('connection', function(socket) {
 							update_card(update_card_d, function(e) {
 								if(e) {
 									var card_list = [2,3,4,5,6,7,8,9,10,'jack','queen','king','ace'];
-									var message = "Bod draw "+card_list[priority]+" for "+game_users[j].username;
-									io.sockets.emit('new message',{game_id:game_users[j].game_id,type: 'info', heading: 'Game Join', message: message});
+									var message = "Bot draw "+card_list[priority]+" for "+game_users[j].username;
+									io.sockets.emit('new message',{game_id:game_users[j].game_id,type: 'success', heading: 'Bot Draw', message: message});
 									io.sockets.emit('new card', {card: card, game_id: game_users[j].game_id});
 								}
 							});
@@ -348,7 +376,12 @@ io.sockets.on('connection', function(socket) {
 				//var splice_check = false;
 				for(var j in game_users) {
 					if(game_users[j].game_id == game_list[i].game_id && game_users[j].roll == min) {
+						var card_list = [2,3,4,5,6,7,8,9,10,'jack','queen','king','ace'];
+						var message = game_users[j].username+" out with minimum card "+card_list[min];
+						io.sockets.emit('new message',{game_id:game_users[j].game_id,type: 'danger', heading: 'OUT', message: message});
 						game_users.splice(j, 1);
+						io.sockets.emit('new user', game_users);
+						break;			
 					}
 				}
 				var left_player;
@@ -364,19 +397,22 @@ io.sockets.on('connection', function(socket) {
 							io.sockets.emit('game info', game_list);
 							var card_list = [2,3,4,5,6,7,8,9,10,'jack','queen','king','ace'];
 							var message = game_users[j].username+" win the match with highest card "+card_list[game_users[j].roll];
-							io.sockets.emit('new message',{game_id:game_users[j].game_id,type: 'success', heading: 'Game Over', message: message});									
+							io.sockets.emit('new message',{game_id:game_users[j].game_id,type: 'success', heading: 'Game Over', message: message});
+							io.sockets.emit('new user', game_users);									
 						}
 					}
 				} else {
 					game_list[i].round += 1;
 					game_list[i].message = "Next round started.";
 					var message = "New round started.";
-					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'success', heading: 'Information', message: message});									
+					for(var k in game_users) {
+						if(game_users[k].game_id == game_list[i].game_id){
+							game_users[k].roll = null;
+							continue;
+						}
+					}
+					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'info', heading: 'Information', message: message});
 					io.sockets.emit('game info', game_list);
-				}
-				for(var j in game_users) {
-					game_users[j].roll = null;
-					io.sockets.emit('new user', game_users);
 				}
 			}
 		}
@@ -405,19 +441,24 @@ io.sockets.on('connection', function(socket) {
 			roll_info = e;
 		});
 		if(!game.game_id) {
-			console.log("Sorry, invalid game.");
+			socket.emit('new message',{game_id:data.game_id,type: 'error', heading: 'Error', message: "Sorry, invalid game."});									
 			return;
 		}
-		if(roll_info.roll != null) {
-			console.log("Sorry, invalid time for roll"+roll_info.roll);
+		if(roll_info.roll) {
+			socket.emit('new message',{game_id:data.game_id,type: 'error', heading: 'Error', message: "Sorry, already rolled for this round."});									
 			return;
 		}
 		if(game.join_time > time) {
-			console.log("Sorry, invalid time for roll. Let joining time be completed."+(game.join_time - time));
+			socket.emit('new message',{game_id:data.game_id,type: 'error', heading: 'Error', message: "Sorry, game is not started yet!. "});									
 			return;
 		}
-		if(roll_info == null) {
+		if(game.status != 1) {
+			socket.emit('new message',{game_id:data.game_id,type: 'error', heading: 'Error', message: "Sorry, you cannot draw."});									
+			return;
+		}
+		if(!roll_info) {
 			console.log("Sorry, you are not in game.");
+			socket.emit('new message',{game_id:data.game_id,type: 'error', heading: 'Error', message: "Sorry, You are not in the game."});									
 			return;
 		}
 		draw_card(priority, function(res) {
@@ -438,7 +479,7 @@ io.sockets.on('connection', function(socket) {
 			if(e) {
 				var card_list = [2,3,4,5,6,7,8,9,10,'jack','queen','king','ace'];
 				var message = username+" draw "+card_list[priority];
-				io.sockets.emit('new message',{game_id:data.game_id,type: 'info', heading: 'Game Draw', message: message});
+				io.sockets.emit('new message',{game_id:data.game_id,type: 'success', heading: 'Game Draw', message: message});
 				io.sockets.emit('new card', {card: card, game_id: data.game_id});
 			}
 			io.sockets.emit('new user', game_users);
