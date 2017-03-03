@@ -110,16 +110,16 @@ html(lang='en')
       ul
         li
           a.btn-floating.red
-            img.responsive-img(src='http://4.bp.blogspot.com/-bB8wUiBfgPg/U5f6UCMlwWI/AAAAAAAAIt0/_qLd_TPe5Hk/s1600/red-angry-smiley-face.png')
+            img.responsive-img(src='http://4.bp.blogspot.com/-bB8wUiBfgPg/U5f6UCMlwWI/AAAAAAAAIt0/_qLd_TPe5Hk/s1600/red-angry-smiley-face.png',class='emoji', data-type='angry')
         li
           a.btn-floating.yellow.darken-1
-            img.responsive-img(src='http://4.bp.blogspot.com/-nn9iheSg_HY/VOfoPqYN-bI/AAAAAAAAODA/lZ259SUvwiY/s1600/laughing-smiley-cries-tears-of-joy.png')
+            img.responsive-img(src='http://4.bp.blogspot.com/-nn9iheSg_HY/VOfoPqYN-bI/AAAAAAAAODA/lZ259SUvwiY/s1600/laughing-smiley-cries-tears-of-joy.png',class='emoji', data-type='laugh')
         li
           a.btn-floating.green
-            img.responsive-img(src='https://quotesandsmileys.files.wordpress.com/2014/05/teary-eyed-emoticon-crying.png?w=560')
+            img.responsive-img(src='https://quotesandsmileys.files.wordpress.com/2014/05/teary-eyed-emoticon-crying.png?w=560',class='emoji', data-type='cry')
         li
           a.btn-floating.blue
-            img.responsive-img(src='https://s-media-cache-ak0.pinimg.com/236x/82/72/98/827298c46e572022f8b3bdd062019b76.jpg')
+            img.responsive-img(src='https://s-media-cache-ak0.pinimg.com/236x/82/72/98/827298c46e572022f8b3bdd062019b76.jpg',class='emoji', data-type='smart')
     // Modals
     // Modal Structure
     #notifications_modals.modal.bottom-sheet
@@ -212,6 +212,9 @@ html(lang='en')
       $("#draw").click(function() {
       socket.emit('draw card', {game_id: #{game_id}});
       });
+      $(".emoji").click(function() {
+      var sm = $(this).attr('data-type');
+      socket.emit('chat', {game_id: #{game_id}, sm: sm});
+      });
       $('#notifications_modals').modal();
-      $('img').tooltip({delay: 50});
       });

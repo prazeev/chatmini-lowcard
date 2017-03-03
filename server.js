@@ -319,9 +319,9 @@ io.sockets.on('connection', function(socket) {
 					}
 					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'error', heading: 'Game Over', message: game_list[i].message});
 				} else {
-					game_list[i].message = "Joining Completed.<br>First round started.";
+					game_list[i].message = "Joining Completed.<br>Round one started.";
 					io.sockets.emit('game info', game_list);
-					var message = "Joining completed. First round starts.";
+					var message = "Joining completed. Round one starts.";
 					io.sockets.emit('new message',{game_id:game_list[i].game_id,type: 'success', heading: 'Information', message: message});
 				}
 				continue;
@@ -499,5 +499,17 @@ io.sockets.on('connection', function(socket) {
 			}
 		}
 		var game_time = Number(game_list[i][6]) - Number(moment().format('X'));
+	});
+	socket.on("chat", function(data) {
+		var game_id = data.game_id;
+		var image = {
+			'angry': 'http://4.bp.blogspot.com/-bB8wUiBfgPg/U5f6UCMlwWI/AAAAAAAAIt0/_qLd_TPe5Hk/s1600/red-angry-smiley-face.png',
+			'laugh': 'http://4.bp.blogspot.com/-nn9iheSg_HY/VOfoPqYN-bI/AAAAAAAAODA/lZ259SUvwiY/s1600/laughing-smiley-cries-tears-of-joy.png',
+			'cry': 'https://quotesandsmileys.files.wordpress.com/2014/05/teary-eyed-emoticon-crying.png?w=560',
+			'smart': 'https://s-media-cache-ak0.pinimg.com/236x/82/72/98/827298c46e572022f8b3bdd062019b76.jpg'
+			};
+		var sm = data.sm;
+		var message = "<center><img src='responsive-img circle' src='http://4.bp.blogspot.com/-nn9iheSg_HY/VOfoPqYN-bI/AAAAAAAAODA/lZ259SUvwiY/s1600/laughing-smiley-cries-tears-of-joy.png'></center>";
+		io.sockets.emit('new message',{game_id:data.game_id,type: 'info', heading: socket.handshake.session.username, message: message});
 	});
 });
